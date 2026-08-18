@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.local
+session.txt
+
+# Generated data and runtime artifacts
+participants.csv
+subscribers-result.csv
+telegram-login-qr.png
+*.log

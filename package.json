@@ -1,0 +1,39 @@
+{
+  "name": "telegram-group-member-scraper",
+  "version": "1.0.0",
+  "description": "This script retrieves the list of members from a specified Telegram group and saves the data in CSV format.",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js",
+    "multi-scrape": "node multi-scrape.js",
+    "add-subscribers": "node add-subscribers.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "telegram",
+    "group",
+    "users",
+    "members",
+    "csv"
+  ],
+  "author": "Vladimir Lazić <contact@vlazic.com> (https://vlazic.com/)",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "json2csv": "6.0.0-alpha.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "volta": {
+    "node": "20.18.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thecoldblooded/telegram-group-member-scraper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thecoldblooded/telegram-group-member-scraper/issues"
+  },
+  "homepage": "https://github.com/thecoldblooded/telegram-group-member-scraper#readme"
+}
