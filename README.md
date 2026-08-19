@@ -3,9 +3,9 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
 [![Anti-Detection Engine](https://img.shields.io/badge/engine-Camofox%20(Camoufox)-blue.svg)](https://github.com/askjo-ai/camofox)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-14%2F14%20passing-success.svg)](test/)
+[![Tests](https://img.shields.io/badge/tests-17%2F17%20passing-success.svg)](test/)
 
-A high-performance, fingerprint-resistant scraper and channel subscriber automation tool for Telegram, driven by [Camofox](https://github.com/askjo-ai/camofox) (anti-detection browser server running Camoufox) and Telegram Web K.
+A high-performance, fingerprint-resistant scraper, channel subscriber automation, and direct invitation tool for Telegram, driven by [Camofox](https://github.com/askjo-ai/camofox) (anti-detection browser server running Camoufox) and Telegram Web K.
 
 Unlike traditional MTProto-based scrapers, this project **does not require Telegram Developer API credentials (`API_ID`, `API_HASH`)** or numeric group IDs. It operates directly through an authenticated Telegram Web session with a persistent user profile.
 
@@ -22,17 +22,23 @@ Unlike traditional MTProto-based scrapers, this project **does not require Teleg
   - Extracts visible participants from public group member panels.
 
 - 🌐 **Multi-Group Aggregator (`npm run multi-scrape`)**:
-  - Scrapes multiple groups sequentially in a single pass (e.g. `@arayises`, `@benimhocamkpss`, `@kodu_group`).
+  - Scrapes multiple groups sequentially in a single pass (e.g. `@arayises`, `@benimhocamkpss`, `@kodu_group`, `@iddaakuponanaliz`).
   - Automatic cross-group deduplication keyed by Telegram numeric user ID.
   - Continuous incremental saving to CSV so progress is never lost.
 
 - 🚀 **Automated Channel Subscriber Adder (`npm run add-subscribers`)**:
   - Automatically adds scraped usernames to your target Telegram channel (`Subscribers -> Add Subscribers`).
   - **Adaptive Rate Limit & Flood Protection**:
-    - Randomized human-like jitter delays (3s – 6s) between invite requests.
+    - Randomized human-like jitter delays (3.5s – 6.5s) between invite requests.
     - Periodic cooldown pauses (12s breather every 10 invites).
     - **`FLOOD_WAIT` Detection**: Automatically detects Telegram server cooldown timers and pauses gracefully to protect your account.
     - **Smart Resume**: Remembers previously processed and privacy-restricted users (`subscribers-result.csv`) to skip redundant requests on subsequent runs.
+
+- ✉️ **Direct Message Invite Sender (`npm run send-invites`)**:
+  - Sends personalized, organic invitation messages containing your channel link (`https://t.me/firsattakipkanali`) directly to scraped usernames.
+  - Randomized polite message templates (spintax) to maintain natural messaging.
+  - Safe human pacing (12s – 25s jitter delay) and cooldown pauses.
+  - `dm-result.csv` tracking to guarantee no user is ever contacted twice.
 
 - 🛡️ **Anti-Detection & Persistent Session**:
   - Powered by Camoufox C++ browser engine with humanized fingerprinting and hardware emulation.
@@ -46,13 +52,15 @@ Unlike traditional MTProto-based scrapers, this project **does not require Teleg
 ├── script.js             # Core scraper CLI & dual-mode scraper engine
 ├── multi-scrape.js       # Multi-group scraper (aggregates across multiple groups)
 ├── add-subscribers.js    # Rate-protected channel subscriber invitation tool
+├── send-invites.js       # Personalized DM invite sender with channel link
 ├── package.json          # Scripts, dependencies, and engine requirements
 ├── .env.example          # Environment configuration template
 ├── test/
 │   ├── normalize.test.js       # Target URL and handle normalization tests
 │   ├── scraper.test.js         # REST client and scraping engine unit tests
 │   ├── add-subscribers.test.js # Subscriber adder and error-handling tests
-│   └── multi-scrape.test.js    # Multi-group aggregator unit tests
+│   ├── multi-scrape.test.js    # Multi-group aggregator unit tests
+│   └── send-invites.test.js    # DM invite sender and spintax tests
 └── README.md             # Project documentation
 ```
 
@@ -131,33 +139,37 @@ npm start
 Or pass target parameters dynamically via CLI:
 
 ```sh
-TARGET=https://t.me/kodu_group USER_LIMIT=1000 SCRAPE_MODE=both npm start
+TARGET=https://web.telegram.org/a/#-1002327951258 USER_LIMIT=1000 SCRAPE_MODE=both npm start
 ```
 
 ### 2. Multi-Group Aggregation (`multi-scrape`)
 
-Scrapes multiple target groups sequentially to build a large deduplicated dataset (e.g. 10,000 users):
+Scrapes multiple target groups sequentially to build a large deduplicated dataset (e.g. 5,000+ users):
 
 ```sh
-# Run with default multi-targets
 npm run multi-scrape
-
-# Or specify custom target groups
-TARGETS="https://web.telegram.org/k/#@arayises,https://web.telegram.org/k/#@benimhocamkpss,https://web.telegram.org/k/#@kodu_group" USER_GOAL=10000 npm run multi-scrape
 ```
 
-### 3. Adding Subscribers to a Telegram Channel
+### 3. Adding Subscribers to a Telegram Channel (`add-subscribers`)
 
-Invites the scraped users from `participants.csv` into your Telegram channel:
+Invites scraped users from `participants.csv` into your Telegram channel:
 
 ```sh
-npm run add-subscribers https://web.telegram.org/k/#@yourchannel participants.csv
+npm run add-subscribers https://web.telegram.org/k/#@firsattakipkanali participants.csv
 ```
 
-With custom delay and safety parameters:
+### 4. Sending Direct Message Channel Invites (`send-invites`)
+
+Sends personalized invitation messages containing your channel link to scraped users who have usernames:
 
 ```sh
-DELAY_MIN_MS=4000 DELAY_MAX_MS=8000 npm run add-subscribers https://web.telegram.org/k/#@yourchannel participants.csv
+npm run send-invites https://t.me/firsattakipkanali participants.csv
+```
+
+With custom delay and session parameters:
+
+```sh
+DM_DELAY_MIN=15000 DM_DELAY_MAX=30000 MAX_DMS=25 npm run send-invites https://t.me/firsattakipkanali participants.csv
 ```
 
 ---
@@ -200,30 +212,24 @@ Scraped user data is saved to `participants.csv` with the following columns:
 | Environment Variable | Default | Description |
 |---|---|---|
 | `TARGET` | `https://t.me/examplegroup` | Single target group username or URL |
-| `TARGETS` | `@arayises,@benimhocamkpss,@kodu_group` | Comma-separated target list for `multi-scrape` |
+| `TARGETS` | `@arayises,@benimhocamkpss,...` | Comma-separated target list for `multi-scrape` |
 | `SCRAPE_MODE` | `both` | Scrape mode: `messages`, `members`, or `both` |
 | `USER_LIMIT` / `USER_GOAL` | `1000` / `10000` | Target count of unique users before completing |
 | `MESSAGE_LIMIT` | `50000` | Safety limit on total conversation messages to inspect |
 | `CAMOFOX_URL` | `http://127.0.0.1:9377` | Camofox server endpoint |
 | `CAMOFOX_USER_ID` | `tg-scraper-user` | Stable persistent browser profile identifier |
 | `CSV_OUTPUT` | `participants.csv` | Path to export scraped participant records |
-| `DELAY_MIN_MS` | `3000` | Minimum jitter delay (ms) between channel invite requests |
-| `DELAY_MAX_MS` | `6000` | Maximum jitter delay (ms) between channel invite requests |
-| `SCROLL_MAX_ITERATIONS` | `100` | Max iterations for DOM member list virtual scrolling |
-| `SCROLL_IDLE_LIMIT` | `8` | Stop after N consecutive scrolls with no new users found |
-
----
-
-## 🛡️ Telegram Privacy & Flood Protection Notes
-
-- **User Privacy Settings**: Telegram users have a privacy setting (*"Who can add me to groups & channels"*). If set to *"My Contacts"*, Telegram restricts direct additions (`PRIVACY_RESTRICTED`). These users are cleanly classified and logged in `subscribers-result.csv`.
-- **Flood Limits (`PEER_FLOOD` / `FLOOD_WAIT`)**: Telegram limits the rate of adding non-mutual contacts to channels. The `add-subscribers` script includes jitter delays, periodic cooldowns, and automatic timer detection to protect your account.
+| `DELAY_MIN_MS` | `3500` | Minimum jitter delay (ms) between channel invite requests |
+| `DELAY_MAX_MS` | `6500` | Maximum jitter delay (ms) between channel invite requests |
+| `DM_DELAY_MIN` | `12000` | Minimum jitter delay (ms) between DM invite messages |
+| `DM_DELAY_MAX` | `22000` | Maximum jitter delay (ms) between DM invite messages |
+| `MAX_DMS` | `50` | Maximum DMs to send per session |
 
 ---
 
 ## 🧪 Testing
 
-The repository includes a comprehensive test suite covering target normalization, REST client operations, error handling, subscriber invitation routines, and multi-target aggregation.
+The repository includes 17 unit tests covering target normalization, REST client operations, error handling, subscriber invitation routines, and multi-target aggregation.
 
 Run tests using Node's native test runner:
 

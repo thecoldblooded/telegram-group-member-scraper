@@ -7,6 +7,7 @@
     "start": "node script.js",
     "multi-scrape": "node multi-scrape.js",
     "add-subscribers": "node add-subscribers.js",
+    "send-invites": "node send-invites.js",
     "test": "node --test"
   },
   "keywords": [

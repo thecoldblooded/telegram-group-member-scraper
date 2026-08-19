@@ -369,13 +369,13 @@ async function initTargetChat(client, tabId, handle) {
     let inputChannel = null;
     let chatTitle = "";
     let chatId = null;
-
     const isNumeric = ${JSON.stringify(isNumeric)};
     const handle = ${JSON.stringify(cleanHandle)};
 
     try {
       if (isNumeric) {
-        const numericId = parseInt(handle, 10);
+        const cleanNumStr = handle.replace(/^-100/, "").replace(/^-/, "");
+        const numericId = parseInt(cleanNumStr, 10);
         let chat = null;
         if (m.appChatsManager && m.appChatsManager.getChat) {
           chat = await m.appChatsManager.getChat(numericId).catch(() => null);
@@ -496,8 +496,11 @@ async function scrapeMembersFromMessages(client, tabId, target, messageLimit = 5
         }
 
         if (!history || !history.messages || history.messages.length === 0) {
-          if (state.offsetId > 100) {
-            state.offsetId -= 100;
+          if (state.offsetId > 5000) {
+            state.offsetId -= 5000;
+            continue;
+          } else if (state.offsetId > 500) {
+            state.offsetId -= 500;
             continue;
           } else {
             reachedEnd = true;
@@ -547,12 +550,13 @@ async function scrapeMembersFromMessages(client, tabId, target, messageLimit = 5
           }
         }
 
-        const lastMsg = history.messages[history.messages.length - 1];
-        if (!lastMsg || lastMsg.id <= 1 || lastMsg.id === state.offsetId) {
+        const lastMsg = history.messages && history.messages.length > 0 ? history.messages[history.messages.length - 1] : null;
+        if (lastMsg && lastMsg.id > 1) {
+          state.offsetId = lastMsg.id;
+        } else if (state.offsetId <= 100) {
           reachedEnd = true;
           break;
         }
-        state.offsetId = lastMsg.id;
       }
 
       return {
@@ -596,7 +600,7 @@ async function scrapeMembersFromMessages(client, tabId, target, messageLimit = 5
       prevUserCount = currentCount;
     } else {
       idleCount++;
-      if (idleCount >= idleLimit && data.reachedEnd) {
+      if (idleCount >= 30 && data.reachedEnd) {
         console.log(`\nSohbet geçmişinin sonuna ulaşıldı.`);
         break;
       }
