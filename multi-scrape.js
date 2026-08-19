@@ -172,7 +172,10 @@ async function scrapeGroupMessages(
         }
 
         if (!history || !history.messages || history.messages.length === 0) {
-          if (state.offsetId > 1500) {
+          if (state.offsetId > 25000) {
+            state.offsetId -= 25000;
+            continue;
+          } else if (state.offsetId > 1500) {
             state.offsetId -= 1500;
             continue;
           } else if (state.offsetId > 100) {
@@ -257,10 +260,8 @@ async function scrapeGroupMessages(
         }
       }
     }
-
     const currentGlobal = globalUserMap.size;
     const addedInGroup = currentGlobal - startGlobalCount;
-
     process.stdout.write(
       `\r[@${targetHandle}] ${groupMessages} mesaj tarandı | Bu gruptan: +${addedInGroup} üye | Toplam Tekil Üye: ${currentGlobal}/${overallUserGoal}...`
     );
@@ -270,12 +271,18 @@ async function scrapeGroupMessages(
       break;
     }
 
-    if (currentGlobal > prevGlobalCount) {
+    if (data.batchProcessed === 0) {
+      idleCount++;
+      if (idleCount >= 3 || data.reachedEnd) {
+        console.log(`\nBu grupta taranacak mesaj kalmadı.`);
+        break;
+      }
+    } else if (currentGlobal > prevGlobalCount) {
       idleCount = 0;
       prevGlobalCount = currentGlobal;
     } else {
       idleCount++;
-      if (idleCount >= 50 && data.reachedEnd) {
+      if (idleCount >= 20 && data.reachedEnd) {
         console.log(`\nSohbet geçmişinin sonuna ulaşıldı.`);
         break;
       }
@@ -298,14 +305,14 @@ async function scrapeGroupMessages(
   const finalAdded = globalUserMap.size - startGlobalCount;
   console.log(`✓ @${targetHandle} tamamlandı: ${groupMessages} mesaj tarandı, +${finalAdded} yeni tekil üye bulundu.\n`);
 }
-
 async function main() {
   const defaultTargets = [
     "https://web.telegram.org/k/#@arayises",
     "https://web.telegram.org/k/#@benimhocamkpss",
     "https://web.telegram.org/k/#@kodu_group",
+    "https://web.telegram.org/k/#@kriptoemrechat",
+    "https://web.telegram.org/k/#@teknofestchat"
   ];
-
   const targetsEnv = process.env.TARGETS || process.argv.slice(2).join(",");
   const rawTargetList = targetsEnv ? targetsEnv.split(",").map((t) => t.trim()).filter(Boolean) : defaultTargets;
 

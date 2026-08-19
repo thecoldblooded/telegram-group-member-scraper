@@ -299,17 +299,9 @@ async function main() {
   }
 
   // Filter candidates: skip those already successfully added, already participants, or permanently privacy-restricted
+  // Filter candidates: skip ANY user that was already processed in previous runs
   const pendingCandidates = candidates.filter((c) => {
-    const prev = existingMap.get(c.username.toLowerCase());
-    if (!prev) return true;
-    if (
-      prev.status === "ADDED_SUCCESSFULLY" ||
-      prev.status === "ALREADY_PARTICIPANT" ||
-      prev.status === "PRIVACY_RESTRICTED"
-    ) {
-      return false; // Skip
-    }
-    return true;
+    return !existingMap.has(c.username.toLowerCase());
   });
 
   console.log(`✓ İşleme alınacak aday sayısı: ${pendingCandidates.length} / ${candidates.length}\n`);
